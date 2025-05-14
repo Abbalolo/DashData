@@ -268,6 +268,7 @@ export default function AuthTabs() {
         {/* SIGN UP */}
         <TabsContent className="text-[#553555]" value="sign-up">
           <Card>
+            <form className="flex flex-col gap-3" onClick={handleRegister}>
             <CardHeader>
               <CardTitle>Create Account</CardTitle>
               <CardDescription>
@@ -331,17 +332,19 @@ export default function AuthTabs() {
             <CardFooter>
               <Button
                 className="w-full bg-[#553555] text-gray-100"
-                onClick={handleRegister}
+                type="submit"
               >
                 Sign Up
               </Button>
             </CardFooter>
+            </form>
           </Card>
         </TabsContent>
 
         {/* LOGIN */}
         <TabsContent className="text-[#553555]" value="login">
           <Card>
+              <form className="flex flex-col gap-3" onSubmit={handleLogin}>
             <CardHeader>
               <CardTitle>Login</CardTitle>
               <CardDescription>Access your account here.</CardDescription>
@@ -377,11 +380,12 @@ export default function AuthTabs() {
             <CardFooter>
               <Button
                 className="w-full bg-[#553555] text-gray-100"
-                onClick={handleLogin}
+                type="submit"
               >
                 Login
               </Button>
             </CardFooter>
+            </form>
           </Card>
         </TabsContent>
       </Tabs>

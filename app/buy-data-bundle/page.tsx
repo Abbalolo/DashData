@@ -2,9 +2,18 @@
 
 import { HiUserCircle } from "react-icons/hi";
 import { IoIosArrowBack } from "react-icons/io";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -49,16 +58,25 @@ function Page() {
   const [plans, setPlans] = useState<PlansByNetwork[]>([]);
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const [selectedNetwork, setSelectedNetwork] = useState<string | undefined>();
-  const [selectedBundleCode, setSelectedBundleCode] = useState<string | undefined>();
-  const [selectedBundlePrice, setSelectedBundlePrice] = useState<number | undefined>();
+  const [selectedBundleCode, setSelectedBundleCode] = useState<
+    string | undefined
+  >();
+  const [selectedBundlePrice, setSelectedBundlePrice] = useState<
+    number | undefined
+  >();
   const [phoneNumber, setPhoneNumber] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const router = useRouter();
-
+  const [tab, setTab] = useState<"daily-plan" | "weekly-plan" | "monthly-plan">(
+    "daily-plan"
+  );
+ const containerRef = useRef<HTMLDivElement>(null);
+  
   const selectBundle = (plan: Plan, index: number) => {
+
     setSelectedBundleCode(plan.name);
-    setSelectedBundlePrice(plan.displayPrice);
+    setSelectedBundlePrice(plan.price);
     setActiveIndex(index);
   };
 
@@ -74,10 +92,12 @@ function Page() {
         const plansData = await planRes.json();
 
         if (netRes.ok && typeof networksData.networks === "object") {
-          const networksArray = Object.entries(networksData.networks).map(([id, name]) => ({
-            id: String(id),
-            name: name as string,
-          }));
+          const networksArray = Object.entries(networksData.networks).map(
+            ([id, name]) => ({
+              id: String(id),
+              name: name as string,
+            })
+          );
           setNetworks(networksArray);
         } else {
           console.error("Invalid networks response:", networksData);
@@ -93,7 +113,9 @@ function Page() {
             "4": "Glo",
           };
 
-          const plansArray: PlansByNetwork[] = Object.entries(plansData.data).map(([networkId, rawPlans]) => {
+          const plansArray: PlansByNetwork[] = Object.entries(
+            plansData.data
+          ).map(([networkId, rawPlans]) => {
             const enhancedPlans = (rawPlans as Plan[]).map((plan) => ({
               ...plan,
               displayPrice: plan.amount + markupAmount,
@@ -101,7 +123,8 @@ function Page() {
 
             return {
               networkId: String(networkId),
-              networkName: networkNames[networkId] || `Unknown Network (${networkId})`,
+              networkName:
+                networkNames[networkId] || `Unknown Network (${networkId})`,
               plans: enhancedPlans,
             };
           });
@@ -111,7 +134,6 @@ function Page() {
           console.error("Invalid plans response:", plansData);
           setHasError(true);
         }
-
       } catch (error) {
         console.error("Fetch error:", error);
         setHasError(true);
@@ -123,7 +145,28 @@ function Page() {
     fetchData();
   }, []);
 
-  const selectedNetworkPlans = plans.find((plan) => plan.networkId === selectedNetwork);
+
+   useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
+        setSelectedBundleCode("");
+        setSelectedBundlePrice(0);
+        setActiveIndex(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const selectedNetworkPlans = plans.find(
+    (plan) => plan.networkId === selectedNetwork
+  );
 
   if (loading) return <Loader />;
   if (hasError) return <NetworkError />;
@@ -131,7 +174,10 @@ function Page() {
   return (
     <>
       <header className="text-gray-200 bg-[#553555] flex items-center gap-5 p-5">
-        <IoIosArrowBack onClick={() => router.back()} className="cursor-pointer" />
+        <IoIosArrowBack
+          onClick={() => router.back()}
+          className="cursor-pointer"
+        />
         <h1>Buy Data Bundle</h1>
       </header>
 
@@ -183,28 +229,94 @@ function Page() {
           </div>
         </div>
 
-        {/* Data Bundle Grid */}
-        {selectedNetworkPlans && (
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="bundle-type">Select Data Plan</Label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 text-center gap-3">
-              {selectedNetworkPlans.plans.map((plan, index) => (
-                <div
-                  key={index}
-                  onClick={() => selectBundle(plan, index)}
-                  className={`text-sm rounded-md py-2 px-1 cursor-pointer duration-100 ${
-                    activeIndex === index
-                      ? "bg-[#553555] text-white"
-                      : "border border-[#553555] hover:border-2"
-                  }`}
-                >
-                  <h2>{plan.name.split(" - ").slice(0, -1).join(" - ")}</h2>
-                  <p>{new Intl.NumberFormat().format(plan.price)}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        <Tabs
+          value={tab}
+          onValueChange={(val) =>
+            setTab(val as "daily-plan" | "weekly-plan" | "monthly-plan")
+          }
+          className="w-full"
+        >
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger
+              value="daily-plan"
+              className={tab === "daily-plan" ? "bg-[#553555] text-white" : ""}
+            >
+              Daily Plan
+            </TabsTrigger>
+            <TabsTrigger
+              value="weekly-plan"
+              className={tab === "weekly-plan" ? "bg-[#553555] text-white" : ""}
+            >
+              Weekly Plan
+            </TabsTrigger>
+            <TabsTrigger
+              value="monthly-plan"
+              className={
+                tab === "monthly-plan" ? "bg-[#553555] text-white" : ""
+              }
+            >
+              Monthly Plan
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value={tab}>
+            {selectedNetworkPlans && (
+              <div className="flex flex-col gap-2 mt-4">
+  <Label htmlFor="bundle-type">Select Data Plan</Label>
+
+  <div
+    
+    className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 text-center gap-3"
+  >
+    {selectedNetworkPlans.plans
+      .filter((plan) => {
+        const name = plan.name.toLowerCase();
+        if (tab === "daily-plan") {
+          const match = name.match(/(\d+)[-\s]*(day|days)/);
+          if (match) {
+            const days = parseInt(match[1], 10);
+            return days <= 6;
+          }
+          return name.includes("daily");
+        }
+        if (tab === "weekly-plan") return name.includes("weekly");
+        if (tab === "monthly-plan")
+          return (
+            name.includes("share") ||
+            name.includes("monthly") ||
+            name.includes("monthly-sme")
+          );
+        return false;
+      })
+      .map((plan, index) => (
+        <div
+        ref={containerRef}
+          key={index}
+          onClick={() => selectBundle(plan, index)}
+          className={`text-sm rounded-md py-2 px-1 cursor-pointer duration-100 ${
+            activeIndex === index
+              ? "bg-[#553555]  text-white"
+              : "border border-[#553555]  hover:border-2"
+          }`}
+        >
+          <h2>{plan.name.split(" - ").slice(0, -1).join(" - ")}</h2>
+          <p
+            className={`text-black font-bold px-4 py-2 rounded ${
+              activeIndex === index
+                ? "bg-[#553555] text-white"
+                : ""
+            }`}
+          >
+            ₦{new Intl.NumberFormat().format(Math.round(plan.price * 1.06))}
+          </p>
+        </div>
+      ))}
+  </div>
+</div>
+
+            )}
+          </TabsContent>
+        </Tabs>
 
         {/* Buy Now Button */}
         <Button

@@ -1,6 +1,5 @@
 "use client";
 
-import { HiUserCircle } from "react-icons/hi";
 import { IoIosArrowBack } from "react-icons/io";
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -145,7 +144,7 @@ function Page() {
         {/* Phone Number Input */}
         <div className="flex flex-col gap-2">
           <Label htmlFor="network-phone">Phone Number</Label>
-          <div className="flex w-full items-center space-x-2">
+         
             <Input
               type="tel"
               name="phone"
@@ -155,8 +154,7 @@ function Page() {
               className="w-full"
               required
             />
-            <HiUserCircle className="text-[#553555] text-2xl cursor-pointer" />
-          </div>
+           
         </div>
 
         {/* Type Selection */}
