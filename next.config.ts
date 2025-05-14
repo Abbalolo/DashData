@@ -1,13 +1,7 @@
-// next.config.js
+import type { NextConfig } from "next";
 
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  // your other config options...
-
-  eslint: {
-    // Disable ESLint during production builds
-    ignoreDuringBuilds: process.env.NODE_ENV === 'production',
-  },
+const nextConfig: NextConfig = {
+  /* config options here */
 };
 
-module.exports = nextConfig;
+export default nextConfig;
